@@ -1,4 +1,4 @@
-import os, re, urllib.request, json
+import os, re, urllib.request, urllib.error, json
 from pathlib import Path
 
 files = sorted(Path("briefings").glob("*.md"))
@@ -24,20 +24,24 @@ def md_to_html(text):
     return '\n'.join(html)
 
 body = md_to_html(content)
-html = f"""<html><body style="margin:0;padding:0;background:#f0f2f5;font-family:'Segoe UI',Arial,sans-serif">
-<div style="max-width:620px;margin:30px auto;background:#1e1e2e;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
-  <div style="background:linear-gradient(135deg,#FFA500,#ff6b35);padding:25px 30px">
-    <h1 style="margin:0;color:white;font-size:22px">Daily Briefing</h1>
-    <p style="margin:5px 0 0;color:rgba(255,255,255,0.85);font-size:14px">{date} - Good morning, Khun Yut!</p>
-  </div>
-  <div style="padding:25px 30px">{body}</div>
-  <div style="padding:15px 30px;border-top:1px solid #333;text-align:center">
-    <p style="color:#585b70;font-size:12px;margin:0">Sent by Claude Agent - 07:30 AM Bangkok time</p>
-  </div>
+html = f"""<html><body style="margin:0;padding:0;background:#f0f2f5;font-family:Arial,sans-serif">
+<div style="max-width:620px;margin:30px auto;background:#1e1e2e;border-radius:16px;padding:25px">
+<h1 style="color:#FFA500">Daily Briefing {date}</h1>
+<p style="color:#89DCEB">Good morning Khun Yut!</p>
+{body}
+<p style="color:#585b70;font-size:12px">Sent by Claude Agent</p>
 </div></body></html>"""
+
+key = os.environ.get('RESEND_API_KEY', '').strip()
+print(f"Key length: {len(key)}, starts with: {key[:8]}")
 
 payload = json.dumps({"from":"onboarding@resend.dev","to":["sarayut.jpr@gmail.com"],"subject":f"Daily Briefing {date}","html":html}).encode()
 req = urllib.request.Request("https://api.resend.com/emails",data=payload,
-    headers={"Authorization":f"Bearer {os.environ['RESEND_API_KEY']}","Content-Type":"application/json"},method="POST")
-with urllib.request.urlopen(req) as r:
-    print("SUCCESS:", json.loads(r.read()))
+    headers={"Authorization":f"Bearer {key}","Content-Type":"application/json"},method="POST")
+try:
+    with urllib.request.urlopen(req) as r:
+        print("SUCCESS:", json.loads(r.read()))
+except urllib.error.HTTPError as e:
+    print(f"HTTP Error {e.code}: {e.read().decode()}")
+except Exception as e:
+    print(f"Error: {e}")
