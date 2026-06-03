@@ -10,10 +10,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Send email via Resend
         run: |
-          FILE=$(git diff-tree --no-commit-id -r --name-only ${{ github.sha }} | grep briefings/ | head -1)
-          CONTENT=$(cat "$FILE" | python3 -c "import sys,re; txt=sys.stdin.read(); print(re.sub(r'[\"\\\\]','',txt))" | head -100)
+          FILE=$(ls briefings/*.md | sort | tail -1)
           DATE=$(echo $FILE | grep -o '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}')
-          curl -X POST https://api.resend.com/emails \
+          CONTENT=$(cat "$FILE" | head -80 | tr -d '"' | tr -d '\r' | tr '\n' ' ')
+          curl -s -X POST https://api.resend.com/emails \
             -H "Authorization: Bearer ${{ secrets.RESEND_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d "{\"from\":\"onboarding@resend.dev\",\"to\":[\"sarayut.jpr@gmail.com\"],\"subject\":\"Daily Briefing $DATE\",\"text\":\"$CONTENT\"}"
+          echo "Email sent"
