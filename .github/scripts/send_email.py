@@ -35,7 +35,7 @@ html = f"""<html><body style="margin:0;padding:0;background:#f0f2f5;font-family:
 key = os.environ.get('RESEND_API_KEY', '').strip()
 print(f"Key length: {len(key)}, starts with: {key[:8]}")
 
-payload = json.dumps({"from":"onboarding@resend.dev","to":["sarayut.jpr@gmail.com"],"subject":f"Daily Briefing {date}","html":html}).encode()
+payload = json.dumps({"from":"onboarding@resend.dev","to":["sarayut.jpr@gmail.com","K_lalana@hotmail.com"],"subject":f"Daily Briefing {date}","html":html}).encode()
 req = urllib.request.Request("https://api.resend.com/emails",data=payload,
     headers={"Authorization":f"Bearer {key}","Content-Type":"application/json"},method="POST")
 try:
